@@ -1,4 +1,4 @@
-export const DESCRIPTIONS = [
+const DESCRIPTIONS = [
   'Прекрасный день!',
   'Захватывающий вид.',
   'Наконец-то отпуск.',
@@ -11,7 +11,7 @@ export const DESCRIPTIONS = [
   'Путешествие продолжается.',
 ];
 
-export const MESSAGES = [
+const MESSAGES = [
   'Всё отлично!',
   'В целом всё неплохо. Но не всё.',
   'Когда вы делаете фотографию, хорошо бы убирать палец из кадра. В конце концов это просто непрофессионально.',
@@ -20,20 +20,25 @@ export const MESSAGES = [
   'Лица у людей на фотке перекошены, как будто их избивают. Как можно было поймать такой неудачный момент?!'
 ];
 
-export const NAMES = [
+const NAMES = [
   'Артём', 'Мария', 'Дмитрий', 'Анна', 'Сергей',
   'Елена', 'Алексей', 'Ольга', 'Иван', 'Наталья',
   'Павел', 'Юлия', 'Михаил', 'Виктория', 'Александр'
 ];
 
-export const PHOTOS_COUNT = 25;
-export const MIN_LIKES = 15;
-export const MAX_LIKES = 200;
-export const MIN_COMMENTS_COUNT = 0;
-export const MAX_COMMENTS_COUNT = 30;
-export const MIN_MESSAGES_COUNT = 1;
-export const MAX_MESSAGES_COUNT = 2;
-export const MIN_ID = 1;
-export const MAX_ID = 1000;
-export const MIN_AVATAR_NUMBER = 1;
-export const MAX_AVATAR_NUMBER = 6;
+const PHOTOS_COUNT = 25;
+const MIN_LIKES = 15;
+const MAX_LIKES = 200;
+const MIN_COMMENTS_COUNT = 0;
+const MAX_COMMENTS_COUNT = 30;
+const MIN_MESSAGES_COUNT = 1;
+const MAX_MESSAGES_COUNT = 2;
+const MIN_ID = 1;
+const MAX_ID = 1000;
+const MIN_AVATAR_NUMBER = 1;
+const MAX_AVATAR_NUMBER = 6;
+
+export { DESCRIPTIONS, MESSAGES, NAMES, PHOTOS_COUNT, MIN_LIKES, MAX_LIKES,
+  MIN_COMMENTS_COUNT, MAX_COMMENTS_COUNT, MIN_MESSAGES_COUNT, MAX_MESSAGES_COUNT,
+  MIN_ID, MAX_ID, MIN_AVATAR_NUMBER, MAX_AVATAR_NUMBER
+};
