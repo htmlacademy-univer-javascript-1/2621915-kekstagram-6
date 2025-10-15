@@ -1,16 +1,15 @@
-function checkStringLength(string, maxLength) {
-  return string.length <= maxLength;
-}
-
-checkStringLength('Строка для проверки', 20);
-
-function isPalindrome(str) {
-  const normalStr = str.replaceAll(' ', '').toLowerCase();
-  let reverStr = '';
-  for (let i = normalStr.length - 1; i >= 0; i--) {
-    reverStr += normalStr[i];
+function isMeetingWithinWorkHours(workStart, workEnd, meetingStart, meetingDuration) {
+  function timeToMinutes(timeStr) {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
   }
-  return normalStr === reverStr;
+
+  const workStartMinutes = timeToMinutes(workStart);
+  const workEndMinutes = timeToMinutes(workEnd);
+  const meetingStartMinutes = timeToMinutes(meetingStart);
+  const meetingEndMinutes = meetingStartMinutes + meetingDuration;
+
+  return meetingStartMinutes >= workStartMinutes && meetingEndMinutes <= workEndMinutes;
 }
 
-isPalindrome('Шалаш');
+isMeetingWithinWorkHours('08:00', '17:30', '14:00', 90);
