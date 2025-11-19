@@ -9,6 +9,9 @@ const commentsLoader = bigPicture.querySelector('.comments-loader');
 const closeBtn = bigPicture.querySelector('.big-picture__cancel');
 
 let onEscKeyDown;
+let photoComments = [];
+let visibleCommentsCount = 0;
+const COMMENTS_STEP = 5;
 
 const createCommentElement = (comment) => {
   const li = document.createElement('li');
@@ -30,6 +33,26 @@ const createCommentElement = (comment) => {
   return li;
 };
 
+const renderNextComments = () => {
+  const next = visibleCommentsCount + COMMENTS_STEP;
+  const commentsToRender = photoComments.slice(visibleCommentsCount, next);
+
+  const fragment = document.createDocumentFragment();
+  commentsToRender.forEach((comment) => {
+    fragment.appendChild(createCommentElement(comment));
+  });
+  socialComments.appendChild(fragment);
+
+  visibleCommentsCount = next;
+
+  commentCountBlock.textContent =
+    `${Math.min(visibleCommentsCount, photoComments.length)} из ${photoComments.length}`;
+
+  if (visibleCommentsCount >= photoComments.length) {
+    commentsLoader.classList.add('hidden');
+  }
+};
+
 const openBigPicture = (photo) => {
   if (!photo) {return;}
 
@@ -39,13 +62,16 @@ const openBigPicture = (photo) => {
   commentsCount.textContent = String(photo.comments.length);
   socialCaption.textContent = photo.description || '';
 
-  socialComments.innerHTML = '';
-  const fragment = document.createDocumentFragment();
-  photo.comments.forEach((c) => fragment.appendChild(createCommentElement(c)));
-  socialComments.appendChild(fragment);
+  commentCountBlock.classList.remove('hidden');
+  commentsLoader.classList.remove('hidden');
 
-  if (commentCountBlock) {commentCountBlock.classList.add('hidden');}
-  if (commentsLoader) {commentsLoader.classList.add('hidden');}
+  socialComments.innerHTML = '';
+  photoComments = photo.comments;
+  visibleCommentsCount = 0;
+
+  renderNextComments();
+
+  commentsLoader.onclick = renderNextComments;
 
   bigPicture.classList.remove('hidden');
   document.body.classList.add('modal-open');
@@ -62,6 +88,7 @@ const openBigPicture = (photo) => {
 function closeBigPicture() {
   bigPicture.classList.add('hidden');
   document.body.classList.remove('modal-open');
+
   document.removeEventListener('keydown', onEscKeyDown);
   closeBtn.removeEventListener('click', closeBigPicture);
 }
