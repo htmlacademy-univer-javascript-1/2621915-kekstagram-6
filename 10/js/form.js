@@ -5,7 +5,7 @@ const inputFile = form.querySelector('.img-upload__input');
 const cancelButton = form.querySelector('.img-upload__cancel');
 const hashtagsInput = form.querySelector('.text__hashtags');
 const commentInput = form.querySelector('.text__description');
-const previewImage = form.querySelector('.img-upload__preview-image');
+const previewImage = form.querySelector('.img-upload__preview img');
 const overlay = document.querySelector('.img-upload__overlay');
 
 const ESC_KEY = 'Escape';
@@ -123,4 +123,4 @@ const initForm = () => {
   form.addEventListener('submit', onFormSubmit);
 };
 
-initForm();
+export {initForm};
