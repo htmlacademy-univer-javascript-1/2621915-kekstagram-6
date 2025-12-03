@@ -111,4 +111,4 @@ function initForm() {
   });
 }
 
-export default initForm;
+export { initForm };
