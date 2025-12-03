@@ -24,46 +24,50 @@ function initForm() {
 
   const hashtagsHandler = (value) => {
     errorMessage = '';
-    const text = value.toLowerCase().trim();
-    if (!text) {return true;}
+    const inputText = value.toLowerCase().trim();
 
-    const items = text.split(/\s+/);
+    if (!inputText) {
+      return true;
+    }
+
+    const inputArray = inputText.split(/\s+/);
 
     const rules = [
       {
-        check: items.some((item) => item.indexOf('#', 1) >= 1),
+        check: inputArray.some((item) => item.indexOf('#', 1) >= 1),
         error: 'Хэш-теги должны разделяться одним пробелом',
       },
       {
-        check: items.some((item) => item[0] !== '#'),
+        check: inputArray.some((item) => item[0] !== '#'),
         error: 'Хэш-тег должен начинаться с символа #',
       },
       {
-        check: items.some((item, i, arr) => arr.includes(item, i + 1)),
+        check: inputArray.some((item, num, arr) => arr.includes(item, num + 1)),
         error: 'Хэш-теги не должны повторяться',
       },
       {
-        check: items.some((item) => item.length > MAX_SYMBOLS),
-        error: `Максимальная длина одного хэш-тега — ${MAX_SYMBOLS} символов`,
+        check: inputArray.some((item) => item.length > MAX_SYMBOLS),
+        error: `Максимальная длина одного хэш-тега ${MAX_SYMBOLS} символов, включая решётку`,
       },
       {
-        check: items.length > MAX_HASHTAGS,
+        check: inputArray.length > MAX_HASHTAGS,
         error: `Нельзя указать больше ${MAX_HASHTAGS} хэш-тегов`,
       },
       {
-        check: items.some((item) => !/^#[a-zа-яё0-9]{1,19}$/i.test(item)),
+        check: inputArray.some((item) => !/^#[a-zа-яё0-9]{1,19}$/i.test(item)),
         error: 'Хэш-тег содержит недопустимые символы',
       },
     ];
 
-    for (let i = 0; i < rules.length; i += 1) {
-      if (rules[i].check) {
-        errorMessage = rules[i].error;
-        return false;
+    const isValid = rules.every((rule) => {
+      const isInvalid = rule.check;
+      if (isInvalid) {
+        errorMessage = rule.error;
       }
-    }
+      return !isInvalid;
+    });
 
-    return true;
+    return isValid;
   };
 
   pristine.addValidator(inputHashtag, hashtagsHandler, getErrorMessage, 2, false);
@@ -72,10 +76,37 @@ function initForm() {
     inputComment,
     (value) => value.length <= 140,
     'Комментарий не должен превышать 140 символов',
+    2,
+    false
   );
 
+  const updateSubmitButton = () => {
+    const submitButton = formUpload.querySelector('.img-upload__submit');
+    const isValid = pristine.validate();
+
+    if (isValid) {
+      submitButton.disabled = false;
+      submitButton.removeAttribute('title');
+    } else {
+      submitButton.disabled = true;
+      submitButton.setAttribute('title', 'Исправьте ошибки в форме');
+    }
+  };
+
+  const onHashtagInput = () => {
+    pristine.validate();
+    updateSubmitButton();
+  };
+
+  const onCommentInput = () => {
+    pristine.validate();
+    updateSubmitButton();
+  };
+
   const openForm = () => {
-    if (!fileInput.files[0]) {return;}
+    if (!fileInput.files[0]) {
+      return;
+    }
     overlay.classList.remove('hidden');
     document.body.classList.add('modal-open');
   };
@@ -86,29 +117,48 @@ function initForm() {
     formUpload.reset();
     pristine.reset();
     fileInput.value = '';
+
+    const submitButton = formUpload.querySelector('.img-upload__submit');
+    submitButton.disabled = false;
+    submitButton.removeAttribute('title');
   };
 
   fileInput.addEventListener('change', openForm);
   cancelButton.addEventListener('click', closeForm);
 
-  document.addEventListener('keydown', (evt) => {
-    if (evt.key === 'Escape') {closeForm();}
-  });
+  const onDocumentKeydown = (evt) => {
+    if (evt.key === 'Escape') {
+      closeForm();
+    }
+  };
+
+  document.addEventListener('keydown', onDocumentKeydown);
 
   [inputHashtag, inputComment].forEach((field) => {
     field.addEventListener('keydown', (evt) => {
-      if (evt.key === 'Escape') {evt.stopPropagation();}
+      if (evt.key === 'Escape') {
+        evt.stopPropagation();
+      }
     });
   });
 
-  inputHashtag.addEventListener('input', () => {
-    pristine.validate();
-  });
+  inputHashtag.addEventListener('input', onHashtagInput);
+  inputComment.addEventListener('input', onCommentInput);
 
   formUpload.addEventListener('submit', (evt) => {
     evt.preventDefault();
-    if (pristine.validate()) {formUpload.submit();}
+
+    const isValid = pristine.validate();
+
+    if (isValid) {
+      formUpload.submit();
+    } else {
+      pristine.validate();
+      updateSubmitButton();
+    }
   });
+
+  updateSubmitButton();
 }
 
 export { initForm };
