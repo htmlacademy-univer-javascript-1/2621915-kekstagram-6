@@ -20,10 +20,11 @@ function initForm() {
 
   let errorMessage = '';
 
-  const getErrorMessage = () => errorMessage;
+  const error = () => errorMessage;
 
   const hashtagsHandler = (value) => {
     errorMessage = '';
+
     const inputText = value.toLowerCase().trim();
 
     if (!inputText) {
@@ -59,48 +60,25 @@ function initForm() {
       },
     ];
 
-    const isValid = rules.every((rule) => {
+    return rules.every((rule) => {
       const isInvalid = rule.check;
       if (isInvalid) {
         errorMessage = rule.error;
       }
       return !isInvalid;
     });
-
-    return isValid;
   };
 
-  pristine.addValidator(inputHashtag, hashtagsHandler, getErrorMessage, 2, false);
+  pristine.addValidator(inputHashtag, hashtagsHandler, error, 2, false);
 
   pristine.addValidator(
     inputComment,
     (value) => value.length <= 140,
-    'Комментарий не должен превышать 140 символов',
-    2,
-    false
+    'Комментарий не должен превышать 140 символов'
   );
-
-  const updateSubmitButton = () => {
-    const submitButton = formUpload.querySelector('.img-upload__submit');
-    const isValid = pristine.validate();
-
-    if (isValid) {
-      submitButton.disabled = false;
-      submitButton.removeAttribute('title');
-    } else {
-      submitButton.disabled = true;
-      submitButton.setAttribute('title', 'Исправьте ошибки в форме');
-    }
-  };
 
   const onHashtagInput = () => {
     pristine.validate();
-    updateSubmitButton();
-  };
-
-  const onCommentInput = () => {
-    pristine.validate();
-    updateSubmitButton();
   };
 
   const openForm = () => {
@@ -117,10 +95,6 @@ function initForm() {
     formUpload.reset();
     pristine.reset();
     fileInput.value = '';
-
-    const submitButton = formUpload.querySelector('.img-upload__submit');
-    submitButton.disabled = false;
-    submitButton.removeAttribute('title');
   };
 
   fileInput.addEventListener('change', openForm);
@@ -143,22 +117,14 @@ function initForm() {
   });
 
   inputHashtag.addEventListener('input', onHashtagInput);
-  inputComment.addEventListener('input', onCommentInput);
 
   formUpload.addEventListener('submit', (evt) => {
     evt.preventDefault();
 
-    const isValid = pristine.validate();
-
-    if (isValid) {
+    if (pristine.validate()) {
       formUpload.submit();
-    } else {
-      pristine.validate();
-      updateSubmitButton();
     }
   });
-
-  updateSubmitButton();
 }
 
 export { initForm };
