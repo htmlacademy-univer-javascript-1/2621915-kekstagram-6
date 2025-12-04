@@ -8,6 +8,7 @@ function initForm() {
   const cancelButton = overlay.querySelector('#upload-cancel');
   const inputHashtag = formUpload.querySelector('.text__hashtags');
   const inputComment = formUpload.querySelector('.text__description');
+  const submitButton = formUpload.querySelector('.img-upload__submit');
 
   const pristine = new Pristine(formUpload, {
     classTo: 'img-upload__item',
@@ -19,17 +20,13 @@ function initForm() {
   });
 
   let errorMessage = '';
-
-  const error = () => errorMessage;
+  const getError = () => errorMessage;
 
   const hashtagsHandler = (value) => {
     errorMessage = '';
 
     const inputText = value.toLowerCase().trim();
-
-    if (!inputText) {
-      return true;
-    }
+    if (!inputText) {return true;}
 
     const inputArray = inputText.split(/\s+/);
 
@@ -61,15 +58,12 @@ function initForm() {
     ];
 
     return rules.every((rule) => {
-      const isInvalid = rule.check;
-      if (isInvalid) {
-        errorMessage = rule.error;
-      }
-      return !isInvalid;
+      if (rule.check) {errorMessage = rule.error;}
+      return !rule.check;
     });
   };
 
-  pristine.addValidator(inputHashtag, hashtagsHandler, error, 2, false);
+  pristine.addValidator(inputHashtag, hashtagsHandler, getError, 2, false);
 
   pristine.addValidator(
     inputComment,
@@ -77,18 +71,23 @@ function initForm() {
     'Комментарий не должен превышать 140 символов'
   );
 
-  const onHashtagInput = () => {
-    pristine.validate(inputHashtag);
+  const updateSubmitButton = () => {
+    const isValid = pristine.validate();
+
+    if (isValid) {
+      submitButton.disabled = false;
+      submitButton.removeAttribute('title');
+    } else {
+      submitButton.disabled = true;
+      submitButton.setAttribute('title', 'Исправьте ошибки в форме');
+    }
   };
 
-  const onCommentInput = () => {
-    pristine.validate(inputComment);
-  };
+  const onHashtagInput = () => updateSubmitButton();
+  const onCommentInput = () => updateSubmitButton();
 
   const openForm = () => {
-    if (!fileInput.files[0]) {
-      return;
-    }
+    if (!fileInput.files[0]) {return;}
     overlay.classList.remove('hidden');
     document.body.classList.add('modal-open');
   };
@@ -96,13 +95,20 @@ function initForm() {
   const closeForm = () => {
     overlay.classList.add('hidden');
     document.body.classList.remove('modal-open');
+
     formUpload.reset();
     pristine.reset();
     fileInput.value = '';
+
+    submitButton.disabled = false;
+    submitButton.removeAttribute('title');
   };
 
   fileInput.addEventListener('change', openForm);
   cancelButton.addEventListener('click', closeForm);
+
+  inputHashtag.addEventListener('input', onHashtagInput);
+  inputComment.addEventListener('input', onCommentInput);
 
   const onDocumentKeydown = (evt) => {
     if (evt.key === 'Escape') {
@@ -120,18 +126,19 @@ function initForm() {
     });
   });
 
-  inputHashtag.addEventListener('input', onHashtagInput);
-  inputComment.addEventListener('input', onCommentInput);
-
   formUpload.addEventListener('submit', (evt) => {
     evt.preventDefault();
 
-    const isValid = pristine.validate();
-
-    if (isValid) {
-      formUpload.submit();
+    if (pristine.validate()) {
+      formUpload.reset();
+      pristine.reset();
+      closeForm();
+    } else {
+      updateSubmitButton();
     }
   });
+
+  updateSubmitButton();
 }
 
 export { initForm };
