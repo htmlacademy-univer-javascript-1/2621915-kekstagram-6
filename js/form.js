@@ -78,7 +78,11 @@ function initForm() {
   );
 
   const onHashtagInput = () => {
-    pristine.validate();
+    pristine.validate(inputHashtag);
+  };
+
+  const onCommentInput = () => {
+    pristine.validate(inputComment);
   };
 
   const openForm = () => {
@@ -117,11 +121,14 @@ function initForm() {
   });
 
   inputHashtag.addEventListener('input', onHashtagInput);
+  inputComment.addEventListener('input', onCommentInput);
 
   formUpload.addEventListener('submit', (evt) => {
     evt.preventDefault();
 
-    if (pristine.validate()) {
+    const isValid = pristine.validate();
+
+    if (isValid) {
       formUpload.submit();
     }
   });
