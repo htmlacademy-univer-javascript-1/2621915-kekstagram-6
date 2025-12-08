@@ -10,72 +10,120 @@ function initForm() {
   const inputComment = formUpload.querySelector('.text__description');
 
   const pristine = new Pristine(formUpload, {
-    classTo: 'img-upload__item',
-    errorClass: 'img-upload__item--invalid',
-    successClass: 'img-upload__item--valid',
-    errorTextParent: 'img-upload__item',
+    classTo: 'img-upload__field-wrapper',
+    errorClass: 'img-upload__field-wrapper--invalid',
+    successClass: 'img-upload__field-wrapper--valid',
+    errorTextParent: 'img-upload__field-wrapper',
     errorTextTag: 'div',
-    errorTextClass: 'img-upload__error',
+    errorTextClass: 'img-upload__error'
   });
 
-  let errorMessage = '';
+  const validateHashtags = (value) => {
+    const inputText = value.trim();
 
-  const getErrorMessage = () => errorMessage;
-
-  const hashtagsHandler = (value) => {
-    errorMessage = '';
-    const inputText = value.toLowerCase().trim();
-
-    if (!inputText) {
+    if (inputText === '') {
       return true;
     }
 
-    const inputArray = inputText.split(/\s+/);
+    const hashtags = inputText.split(/\s+/);
 
-    const rules = [
-      {
-        check: inputArray.some((item) => item.indexOf('#', 1) >= 1),
-        error: 'Хэш-теги должны разделяться одним пробелом',
-      },
-      {
-        check: inputArray.some((item) => item[0] !== '#'),
-        error: 'Хэш-тег должен начинаться с символа #',
-      },
-      {
-        check: inputArray.some((item, num, arr) => arr.includes(item, num + 1)),
-        error: 'Хэш-теги не должны повторяться',
-      },
-      {
-        check: inputArray.some((item) => item.length > MAX_SYMBOLS),
-        error: `Максимальная длина одного хэш-тега ${MAX_SYMBOLS} символов, включая решётку`,
-      },
-      {
-        check: inputArray.length > MAX_HASHTAGS,
-        error: `Нельзя указать больше ${MAX_HASHTAGS} хэш-тегов`,
-      },
-      {
-        check: inputArray.some((item) => !/^#[a-zа-яё0-9]{1,19}$/i.test(item)),
-        error: 'Хэш-тег содержит недопустимые символы',
-      },
-    ];
+    if (hashtags.length > MAX_HASHTAGS) {
+      return false;
+    }
 
-    const isValid = rules.every((rule) => {
-      const isInvalid = rule.check;
-      if (isInvalid) {
-        errorMessage = rule.error;
+    const lowerCaseHashtags = new Set();
+
+    for (let i = 0; i < hashtags.length; i++) {
+      const hashtag = hashtags[i];
+
+      if (hashtag[0] !== '#') {
+        return false;
       }
-      return !isInvalid;
-    });
 
-    return isValid;
+      if (hashtag === '#') {
+        return false;
+      }
+
+      if (hashtag.length > MAX_SYMBOLS) {
+        return false;
+      }
+
+      if (!/^#[a-zа-яё0-9-]{1,19}$/i.test(hashtag)) {
+        return false;
+      }
+
+      if (hashtag.includes(' ', 1)) {
+        return false;
+      }
+
+      const lowerCaseTag = hashtag.toLowerCase();
+      if (lowerCaseHashtags.has(lowerCaseTag)) {
+        return false;
+      }
+      lowerCaseHashtags.add(lowerCaseTag);
+    }
+
+    return true;
   };
 
-  pristine.addValidator(inputHashtag, hashtagsHandler, getErrorMessage, 2, false);
+  const getHashtagErrorMessage = (value) => {
+    const inputText = value.trim();
+
+    if (inputText === '') {
+      return '';
+    }
+
+    const hashtags = inputText.split(/\s+/);
+
+    if (hashtags.length > MAX_HASHTAGS) {
+      return `Нельзя указать больше ${MAX_HASHTAGS} хэш-тегов`;
+    }
+
+    for (let i = 0; i < hashtags.length; i++) {
+      const hashtag = hashtags[i];
+
+      if (hashtag[0] !== '#') {
+        return 'Хэш-тег должен начинаться с символа #';
+      }
+
+      if (hashtag === '#') {
+        return 'Хэштег не может состоять только из решётки';
+      }
+
+      if (hashtag.length > MAX_SYMBOLS) {
+        return `Максимальная длина хэштега ${MAX_SYMBOLS} символов`;
+      }
+
+      if (!/^#[a-zа-яё0-9-]{1,19}$/i.test(hashtag)) {
+        return 'Хэштег содержит недопустимые символы';
+      }
+
+      if (hashtag.includes(' ', 1)) {
+        return 'Хэштеги должны разделяться пробелами';
+      }
+    }
+
+    const lowerCaseTags = hashtags.map((tag) => tag.toLowerCase());
+    const uniqueTags = [...new Set(lowerCaseTags)];
+    if (uniqueTags.length !== hashtags.length) {
+      return 'Хэштеги не должны повторяться';
+    }
+
+    return '';
+  };
+
+  pristine.addValidator(
+    inputHashtag,
+    validateHashtags,
+    getHashtagErrorMessage,
+    2,
+    false
+  );
 
   pristine.addValidator(
     inputComment,
     (value) => value.length <= 140,
-    'Комментарий не должен превышать 140 символов',
+    'Длина комментария не может превышать 140 символов',
     2,
     false
   );
@@ -93,22 +141,13 @@ function initForm() {
     }
   };
 
-  const onHashtagInput = () => {
-    pristine.validate();
-    updateSubmitButton();
-  };
-
-  const onCommentInput = () => {
-    pristine.validate();
-    updateSubmitButton();
-  };
-
   const openForm = () => {
     if (!fileInput.files[0]) {
       return;
     }
     overlay.classList.remove('hidden');
     document.body.classList.add('modal-open');
+    updateSubmitButton();
   };
 
   const closeForm = () => {
@@ -123,11 +162,16 @@ function initForm() {
     submitButton.removeAttribute('title');
   };
 
+  const onInput = () => {
+    pristine.validate();
+    updateSubmitButton();
+  };
+
   fileInput.addEventListener('change', openForm);
   cancelButton.addEventListener('click', closeForm);
 
   const onDocumentKeydown = (evt) => {
-    if (evt.key === 'Escape') {
+    if (evt.key === 'Escape' && !overlay.classList.contains('hidden')) {
       closeForm();
     }
   };
@@ -140,10 +184,9 @@ function initForm() {
         evt.stopPropagation();
       }
     });
-  });
 
-  inputHashtag.addEventListener('input', onHashtagInput);
-  inputComment.addEventListener('input', onCommentInput);
+    field.addEventListener('input', onInput);
+  });
 
   formUpload.addEventListener('submit', (evt) => {
     evt.preventDefault();
@@ -158,7 +201,10 @@ function initForm() {
     }
   });
 
-  updateSubmitButton();
+  fileInput.addEventListener('change', () => {
+    pristine.reset();
+    updateSubmitButton();
+  });
 }
 
 export { initForm };
