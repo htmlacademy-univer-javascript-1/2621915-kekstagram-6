@@ -159,6 +159,7 @@ function initImageEditor() {
 
   uploadInput.addEventListener('change', () => {
     overlay.classList.remove('hidden');
+    resetImageEditor();
   });
 
   cancelButton.addEventListener('click', () => {
