@@ -2,11 +2,13 @@ import { generatePhotos } from './photos.js';
 import { renderThumbnails } from './thumbnails.js';
 import { openBigPicture } from './big-picture.js';
 import { initForm } from './form.js';
+import { initImageEditor } from './effects.js';
 
 const picturesContainer = document.querySelector('.pictures');
 const photos = generatePhotos();
 
 renderThumbnails(photos);
+initImageEditor();
 initForm();
 
 picturesContainer.addEventListener('click', (evt) => {
