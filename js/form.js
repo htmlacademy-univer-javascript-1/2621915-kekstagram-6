@@ -1,3 +1,6 @@
+import { sendDataToServer } from './fetch.js';
+import { showMessage } from './util.js';
+
 const MAX_SYMBOLS = 20;
 const MAX_HASHTAGS = 5;
 
@@ -8,6 +11,7 @@ function initForm() {
   const cancelButton = overlay.querySelector('#upload-cancel');
   const inputHashtag = formUpload.querySelector('.text__hashtags');
   const inputComment = formUpload.querySelector('.text__description');
+  const submitButton = formUpload.querySelector('.img-upload__submit');
 
   const pristine = new Pristine(formUpload, {
     classTo: 'img-upload__field-wrapper',
@@ -20,55 +24,39 @@ function initForm() {
 
   const validateHashtags = (value) => {
     const inputText = value.trim();
-
     if (inputText === '') {
       return true;
     }
 
     const hashtags = inputText.split(/\s+/);
-
     if (hashtags.length > MAX_HASHTAGS) {
       return false;
     }
 
-    const lowerCaseHashtags = new Set();
+    const uniqueTags = new Set();
 
-    for (let i = 0; i < hashtags.length; i++) {
-      const hashtag = hashtags[i];
-
-      if (hashtag[0] !== '#') {
+    return hashtags.every((hashtag) => {
+      if (
+        hashtag[0] !== '#' ||
+        hashtag === '#' ||
+        hashtag.length > MAX_SYMBOLS ||
+        !/^#[a-zа-яё0-9-]{1,19}$/i.test(hashtag)
+      ) {
         return false;
       }
 
-      if (hashtag === '#') {
+      const lower = hashtag.toLowerCase();
+      if (uniqueTags.has(lower)) {
         return false;
       }
 
-      if (hashtag.length > MAX_SYMBOLS) {
-        return false;
-      }
-
-      if (!/^#[a-zа-яё0-9-]{1,19}$/i.test(hashtag)) {
-        return false;
-      }
-
-      if (hashtag.includes(' ', 1)) {
-        return false;
-      }
-
-      const lowerCaseTag = hashtag.toLowerCase();
-      if (lowerCaseHashtags.has(lowerCaseTag)) {
-        return false;
-      }
-      lowerCaseHashtags.add(lowerCaseTag);
-    }
-
-    return true;
+      uniqueTags.add(lower);
+      return true;
+    });
   };
 
   const getHashtagErrorMessage = (value) => {
     const inputText = value.trim();
-
     if (inputText === '') {
       return '';
     }
@@ -79,70 +67,50 @@ function initForm() {
       return `Нельзя указать больше ${MAX_HASHTAGS} хэш-тегов`;
     }
 
-    for (let i = 0; i < hashtags.length; i++) {
-      const hashtag = hashtags[i];
-
+    for (const hashtag of hashtags) {
       if (hashtag[0] !== '#') {
         return 'Хэш-тег должен начинаться с символа #';
       }
-
       if (hashtag === '#') {
         return 'Хэштег не может состоять только из решётки';
       }
-
       if (hashtag.length > MAX_SYMBOLS) {
         return `Максимальная длина хэштега ${MAX_SYMBOLS} символов`;
       }
-
       if (!/^#[a-zа-яё0-9-]{1,19}$/i.test(hashtag)) {
         return 'Хэштег содержит недопустимые символы';
       }
-
       if (hashtag.includes(' ', 1)) {
         return 'Хэштеги должны разделяться пробелами';
       }
     }
 
-    const lowerCaseTags = hashtags.map((tag) => tag.toLowerCase());
-    const uniqueTags = [...new Set(lowerCaseTags)];
-    if (uniqueTags.length !== hashtags.length) {
+    const lowerTags = hashtags.map((tag) => tag.toLowerCase());
+    if (new Set(lowerTags).size !== lowerTags.length) {
       return 'Хэштеги не должны повторяться';
     }
 
     return '';
   };
 
-  pristine.addValidator(
-    inputHashtag,
-    validateHashtags,
-    getHashtagErrorMessage,
-    2,
-    false
-  );
-
+  pristine.addValidator(inputHashtag, validateHashtags, getHashtagErrorMessage);
   pristine.addValidator(
     inputComment,
     (value) => value.length <= 140,
-    'Длина комментария не может превышать 140 символов',
-    2,
-    false
+    'Длина комментария не может превышать 140 символов'
   );
 
   const updateSubmitButton = () => {
-    const submitButton = formUpload.querySelector('.img-upload__submit');
-    const isValid = pristine.validate();
+    submitButton.disabled = !pristine.validate();
+  };
 
-    if (isValid) {
-      submitButton.disabled = false;
-      submitButton.removeAttribute('title');
-    } else {
-      submitButton.disabled = true;
-      submitButton.setAttribute('title', 'Исправьте ошибки в форме');
-    }
+  const hideForm = () => {
+    overlay.classList.add('hidden');
+    document.body.classList.remove('modal-open');
   };
 
   const openForm = () => {
-    if (!fileInput.files[0]) {
+    if (!fileInput.files.length) {
       return;
     }
     overlay.classList.remove('hidden');
@@ -153,30 +121,25 @@ function initForm() {
   const closeForm = () => {
     overlay.classList.add('hidden');
     document.body.classList.remove('modal-open');
+
     formUpload.reset();
     pristine.reset();
     fileInput.value = '';
 
-    const submitButton = formUpload.querySelector('.img-upload__submit');
-    submitButton.disabled = false;
-    submitButton.removeAttribute('title');
-  };
+    document.querySelector('.scale__control--value').value = '100%';
+    formUpload.querySelector('input[name="effect"][value="none"]').checked = true;
 
-  const onInput = () => {
-    pristine.validate();
-    updateSubmitButton();
+    submitButton.disabled = false;
   };
 
   fileInput.addEventListener('change', openForm);
   cancelButton.addEventListener('click', closeForm);
 
-  const onDocumentKeydown = (evt) => {
+  document.addEventListener('keydown', (evt) => {
     if (evt.key === 'Escape' && !overlay.classList.contains('hidden')) {
       closeForm();
     }
-  };
-
-  document.addEventListener('keydown', onDocumentKeydown);
+  });
 
   [inputHashtag, inputComment].forEach((field) => {
     field.addEventListener('keydown', (evt) => {
@@ -185,25 +148,39 @@ function initForm() {
       }
     });
 
-    field.addEventListener('input', onInput);
+    field.addEventListener('input', updateSubmitButton);
   });
 
   formUpload.addEventListener('submit', (evt) => {
     evt.preventDefault();
 
-    const isValid = pristine.validate();
-
-    if (isValid) {
-      formUpload.submit();
-    } else {
-      pristine.validate();
-      updateSubmitButton();
+    if (!pristine.validate()) {
+      return;
     }
-  });
 
-  fileInput.addEventListener('change', () => {
-    pristine.reset();
-    updateSubmitButton();
+    submitButton.disabled = true;
+
+    sendDataToServer(new FormData(formUpload))
+      .then(() => {
+        closeForm();
+        showMessage('#success');
+      })
+      .catch(() => {
+        submitButton.disabled = false;
+
+        hideForm();
+
+        showMessage('#error', {
+          onButton: () => {
+            overlay.classList.remove('hidden');
+            document.body.classList.add('modal-open');
+          },
+
+          onClose: () => {
+            closeForm();
+          }
+        });
+      });
   });
 }
 
