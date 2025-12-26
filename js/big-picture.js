@@ -46,7 +46,7 @@ const renderNextComments = () => {
   visibleCommentsCount = next;
 
   commentCountBlock.textContent =
-    `${Math.min(visibleCommentsCount, photoComments.length)} из ${photoComments.length}`;
+    `${Math.min(visibleCommentsCount, photoComments.length)} из ${photoComments.length} коментариев`;
 
   if (visibleCommentsCount >= photoComments.length) {
     commentsLoader.classList.add('hidden');
