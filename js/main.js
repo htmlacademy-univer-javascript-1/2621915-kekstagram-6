@@ -3,6 +3,7 @@ import { openBigPicture } from './big-picture.js';
 import { initForm } from './form.js';
 import { initImageEditor } from './effects.js';
 import { getDataFromServer } from './fetch.js';
+import { initFilters } from './filters.js';
 
 const picturesContainer = document.querySelector('.pictures');
 let photos = [];
@@ -11,6 +12,7 @@ getDataFromServer()
   .then((data) => {
     photos = data;
     renderThumbnails(photos);
+    initFilters(photos);
   })
   .catch(() => {
     const error = document.createElement('div');

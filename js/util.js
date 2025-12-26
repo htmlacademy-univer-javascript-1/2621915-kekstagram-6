@@ -1,3 +1,19 @@
+function debounce(callback, timeoutDelay = 500) {
+  let timeoutId;
+  return (...rest) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => callback.apply(this, rest), timeoutDelay);
+  };
+}
+
+const shuffleArray = (array) => {
+  for (let indexOne = array.length - 1; indexOne > 0; indexOne--) {
+    const indexTwo = Math.floor(Math.random() * (indexOne + 1));
+    [array[indexOne], array[indexTwo]] = [array[indexTwo], array[indexOne]];
+  }
+  return array;
+};
+
 function showMessage(templateId, { onButton, onClose } = {}) {
   const template = document.querySelector(templateId).content.cloneNode(true);
   const message = template.querySelector('section');
@@ -32,4 +48,4 @@ function showMessage(templateId, { onButton, onClose } = {}) {
   document.addEventListener('click', onOutsideClick);
 }
 
-export { showMessage };
+export { showMessage, shuffleArray, debounce };
