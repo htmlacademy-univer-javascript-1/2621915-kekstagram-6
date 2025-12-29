@@ -14,6 +14,8 @@ const shuffleArray = (array) => {
   return array;
 };
 
+const isEscKey = (evt) => evt.key === 'Escape';
+
 function showMessage(templateId, { onButton, onClose } = {}) {
   const template = document.querySelector(templateId).content.cloneNode(true);
   const message = template.querySelector('section');
@@ -29,7 +31,7 @@ function showMessage(templateId, { onButton, onClose } = {}) {
   }
 
   function onEscKeydown(evt) {
-    if (evt.key === 'Escape') {
+    if (isEscKey(evt)) {
       closeMessage(onClose);
     }
   }
@@ -48,4 +50,4 @@ function showMessage(templateId, { onButton, onClose } = {}) {
   document.addEventListener('click', onOutsideClick);
 }
 
-export { showMessage, shuffleArray, debounce };
+export { showMessage, shuffleArray, debounce, isEscKey };

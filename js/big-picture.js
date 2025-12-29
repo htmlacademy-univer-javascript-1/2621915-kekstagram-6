@@ -1,3 +1,7 @@
+import { isEscKey } from './util.js';
+
+const COMMENTS_STEP = 5;
+
 const bigPicture = document.querySelector('.big-picture');
 const bigImg = bigPicture.querySelector('.big-picture__img img');
 const likesCount = bigPicture.querySelector('.likes-count');
@@ -11,7 +15,6 @@ const closeBtn = bigPicture.querySelector('.big-picture__cancel');
 let onEscKeyDown;
 let photoComments = [];
 let visibleCommentsCount = 0;
-const COMMENTS_STEP = 5;
 
 const createCommentElement = (comment) => {
   const li = document.createElement('li');
@@ -77,7 +80,7 @@ const openBigPicture = (photo) => {
   document.body.classList.add('modal-open');
 
   onEscKeyDown = (evt) => {
-    if (evt.key === 'Escape' || evt.key === 'Esc') {
+    if (isEscKey(evt)) {
       closeBigPicture();
     }
   };
