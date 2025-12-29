@@ -1,8 +1,9 @@
 import { sendDataToServer } from './fetch.js';
-import { showMessage } from './util.js';
+import { showMessage, isEscKey } from './util.js';
 
 const MAX_SYMBOLS = 20;
 const MAX_HASHTAGS = 5;
+const MAX_COMMENT_LENGTH = 140;
 const FILE_TYPES = ['jpg', 'jpeg', 'png', 'gif'];
 
 function initForm() {
@@ -122,8 +123,8 @@ function initForm() {
   pristine.addValidator(inputHashtag, validateHashtags, getHashtagErrorMessage);
   pristine.addValidator(
     inputComment,
-    (value) => value.length <= 140,
-    'Длина комментария не может превышать 140 символов'
+    (value) => value.length <= MAX_COMMENT_LENGTH,
+    `Длина комментария не может превышать ${MAX_COMMENT_LENGTH} символов`
   );
 
   const updateSubmitButton = () => {
@@ -164,14 +165,14 @@ function initForm() {
   cancelButton.addEventListener('click', closeForm);
 
   document.addEventListener('keydown', (evt) => {
-    if (evt.key === 'Escape' && !overlay.classList.contains('hidden')) {
+    if (isEscKey(evt) && !overlay.classList.contains('hidden')) {
       closeForm();
     }
   });
 
   [inputHashtag, inputComment].forEach((field) => {
     field.addEventListener('keydown', (evt) => {
-      if (evt.key === 'Escape') {
+      if (isEscKey(evt)) {
         evt.stopPropagation();
       }
     });
@@ -205,7 +206,8 @@ function initForm() {
           },
 
           onClose: () => {
-            closeForm();
+            overlay.classList.remove('hidden');
+            document.body.classList.add('modal-open');
           }
         });
       });
